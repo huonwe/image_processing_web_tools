@@ -1,0 +1,126 @@
+body {
+    width: 95vw;
+    height: 95vh;
+    /* display: flex;
+    flex-direction: column; */
+}
+
+img {
+    object-fit: contain;
+    width: 90%;
+    height: 90%;
+}
+
+/* .img_show_main {
+    width: 80%;
+    max-height: 30%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+} */
+
+
+/* .range_bar {
+    margin-right: 3rem;
+} */
+
+.hist {
+    width: 30%;
+    height: 100%;
+    /* max-height: 60%; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.img_box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.img_box .row {
+    width: 100%;
+    height: 50%;
+    display: flex;
+    flex-direction: row;
+}
+
+/* .img_box img {
+    height: 20%;
+} */
+
+.btns {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+button {
+    border: 0;
+    border-bottom: 1px solid gray;
+    border-radius: 15px;
+    width: 8rem;
+    height: 3rem;
+    background-color: rgb(244, 255, 251);
+}
+
+button:hover {
+    cursor: pointer;
+    background-color: rgb(217, 253, 241);
+}
+
+.extra {
+    width: 100%;
+    /* height: 50vh; */
+    display: flex;
+    flex-direction: column;
+    /* margin-top: 5rem; */
+}
+
+.extra .row {
+    display: flex;
+    flex-direction: row;
+    margin-top: 2rem;
+}
+
+.extra .row_unit {
+    width: 33%;
+    display: flex;
+    flex-direction: column;
+}
+
+.template {
+    width: 20rem;
+    height: 20rem;
+}
+
+.template tr {
+    width: 100%;
+    height: 33%;
+}
+
+.template tr td {
+    width: 33%;
+    outline: 1px solid purple;
+}
+
+.template tr td input {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    outline: 0;
+    text-align: center;
+    font-size: large;
+}
+
+.template tr td:hover {
+    cursor: pointer;
+    outline: 1px solid blue;
+}
+
+.template tr td:focus {
+    outline: 1px solid blue;
+}

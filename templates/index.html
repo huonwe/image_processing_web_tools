@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/statics/index.css">
+</head>
+
+<body>
+    <div style="width: 100%;height: 80%;display: flex; flex-direction: row;">
+        <div class="hist">
+            <img id="img_hist" src="" alt="直方图">
+        </div>
+        <div class="img_box">
+            <div class="row">
+                <img id="img_raw" src="" alt="原图像展示" title="原图像">
+                <img id="img_heq" src="" alt="直方图均衡化" title="直方图均衡化">
+                <img id="img_dft" src="" alt="DFT" title="DFT">
+            </div>
+            <div class="row">
+                <img id="img_global_thr_1" src="" alt="全局阈值1" title="全局阈值分割1">
+                <img id="img_global_thr_2" src="" alt="全局阈值2" title="全局阈值分割2">
+                <img id="img_edge" src="" alt="边缘检测" title="边缘检测">
+            </div>
+        </div>
+    </div>
+
+    <div class="btns">
+        <div>
+            <button onclick="document.querySelector('#img_upload').click()">选择图像</button>
+            <input id="img_upload" type="file" style="display: none;">
+        </div>
+        <div class="range_bar">
+            <input id="global_thr" type="range" name="global_thr" min="0" max="255" value="0">
+            <label for="global_thr">全局阈值</label>
+            <label for="global_thr" id="global_thr_v">0</label>
+            <label for="global_thr" id="global_thr_otsu">Otsu推荐阈值</label>
+            <div>
+                <input id="canny_thr_1" type="range" name="canny_thr_1" min="0" max="255" value="100">
+                <label for="canny_thr_1">Canny THR MINVAL</label>
+                <label for="canny_thr_1" id="canny_thr_1_v">100</label>
+                <input id="canny_thr_2" type="range" name="canny_thr_2" min="0" max="255" value="200">
+                <label for="canny_thr_2">Canny THR MAXVAL</label>
+                <label for="canny_thr_2" id="canny_thr_2_v">200</label>
+            </div>
+        </div>
+    </div>
+    <hr>
+    <div class="extra">
+        <div class="row">
+            <div class="row_unit">
+                <img id="img_gaussblur" src="" alt="高斯模糊" title="高斯模糊">
+                <div>
+                    <input id="gauss_ks" type="range" name="gauss_ks" min="1" max="29" value="15" step="2">
+                    <label for="gauss_ks">高斯核大小</label>
+                    <label for="gauss_ks" id="gauss_ks_v">15*15</label>
+                    <input id="gauss_sigma" type="range" name="gauss_sigma" min="1" max="10" value="3">
+                    <label for="gauss_sigma">sigmaX</label>
+                    <label for="gauss_sigma" id="gauss_sigma_v">3</label>
+                </div>
+            </div>
+            <div class="row_unit">
+                <img id="img_raw_sub_gaussblur" src="" alt="非锐化掩蔽模板" title="非锐化掩蔽模板">
+                <div>
+                    <input id="gauss_k" type="range" name="gauss_k" min="0" max="10" value="4.5" step="0.5">
+                    <label for="gauss_k">mask合并系数</label>
+                    <label for="gauss_k" id="gauss_k_v">4.5</label>
+                </div>
+            </div>
+            <div class="row_unit">
+                <img id="img_raw_add_mask" src="" alt="合并结果" title="合并结果">
+            </div>
+        </div>
+        <div class="row">
+            <div class="row_unit" style="display: flex;justify-content: center;align-items: center;">
+                <table class="template">
+                    <thead>
+                        <tr>
+                            <th colspan="3">卷积模板</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" id="tplt_1" value="0"></td><td><input type="text" id="tplt_2" value="0"></td><td><input type="text" id="tplt_3" value="0"></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" id="tplt_4" value="0"></td><td><input type="text" id="tplt_5" value="1"></td><td><input type="text" id="tplt_6" value="0"></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" id="tplt_7" value="0"></td><td><input type="text" id="tplt_8" value="0"></td><td><input type="text" id="tplt_9" value="0"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button id="kernel_apply">应用</button>
+            </div>
+            <div class="row_unit">
+                <img id="tplt_result" src="" alt="卷积结果" title="卷积结果">
+            </div>
+            <div class="row_unit">
+                <img id="tplt_result_norm" src="" alt="卷积结果(规范化)" title="卷积结果(规范化)">
+            </div>
+        </div>
+    </div>
+
+
+
+
+</body>
+<script>
+    const socket = new WebSocket("ws://" + location.host + "/img/global_thr");
+    const img_upload = document.querySelector("#img_upload");
+    const img_hist = document.querySelector("#img_hist");
+    const img_global_thr_1 = document.querySelector("#img_global_thr_1");
+    const img_global_thr_2 = document.querySelector("#img_global_thr_2");
+
+    const img_gaussblur = document.querySelector("#img_gaussblur");
+    const img_gaussblur_mask = document.querySelector("#img_raw_sub_gaussblur");
+    const img_gaussblur_merge = document.querySelector("#img_raw_add_mask");
+
+    const img_template_conv_result = document.querySelector("#tplt_result");
+    const img_template_conv_result_norm = document.querySelector("#tplt_result_norm")
+
+    const global_thr_range = document.querySelector("#global_thr");
+    const canny_thr_range_1 = document.querySelector("#canny_thr_1");
+    const canny_thr_range_2 = document.querySelector("#canny_thr_2");
+
+    const gauss_ks_range = document.querySelector("#gauss_ks");
+    const gauss_sigma_range = document.querySelector("#gauss_sigma");
+    const gauss_mask_k_range = document.querySelector("#gauss_k");
+
+    // const tplt_k = document.querySelector("#tplt_k")
+    const tplt_1 = document.querySelector("#tplt_1")
+    const tplt_2 = document.querySelector("#tplt_2")
+    const tplt_3 = document.querySelector("#tplt_3")
+    const tplt_4 = document.querySelector("#tplt_4")
+    const tplt_5 = document.querySelector("#tplt_5")
+    const tplt_6 = document.querySelector("#tplt_6")
+    const tplt_7 = document.querySelector("#tplt_7")
+    const tplt_8 = document.querySelector("#tplt_8")
+    const tplt_9 = document.querySelector("#tplt_9")
+    const tplts = [tplt_1,tplt_2,tplt_3,tplt_4,tplt_5,tplt_6,tplt_7,tplt_8,tplt_9]
+    const kernel_apply = document.querySelector("#kernel_apply")
+    kernel_apply.addEventListener("click",ev=>{
+        let values = new Array();
+        tplts.forEach(tplt => {
+            values.push(tplt.value)
+        })
+        socket.send("TPL" + values.join())
+    })
+    // tplts.forEach(tplt => {
+    //     tplt.addEventListener("change",ev=>{
+    //         let values = new Array();
+    //         tplts.forEach(e => {
+    //             values.push(e.value)
+    //         })
+    //         // console.log(values)
+    //         socket.send("TPL" + values.join())
+    //     })
+    // })
+
+
+    const ws_prefix = 4
+
+    global_thr_range.addEventListener("input", ev => {
+        socket.send("THR" + global_thr_range.value)
+        document.querySelector("#global_thr_v").innerHTML = global_thr_range.value
+    })
+    canny_thr_range_1.addEventListener("input",ev=>{
+        socket.send("CN1" + canny_thr_range_1.value)
+        document.querySelector("#canny_thr_1_v").innerHTML = canny_thr_range_1.value
+    })
+    canny_thr_range_2.addEventListener("input",ev=>{
+        socket.send("CN2" + canny_thr_range_2.value)
+        document.querySelector("#canny_thr_2_v").innerHTML = canny_thr_range_2.value
+    })
+
+    gauss_ks_range.addEventListener("input",ev=>{
+        socket.send("GS1"+gauss_ks_range.value)
+        document.querySelector("#gauss_ks_v").innerHTML = gauss_ks_range.value + "*" + gauss_ks_range.value
+    })
+    gauss_sigma_range.addEventListener("input",ev=>{
+        socket.send("GS2"+gauss_sigma_range.value)
+        document.querySelector("#gauss_sigma_v").innerHTML = gauss_sigma_range.value
+    })
+    gauss_mask_k_range.addEventListener("input",ev=>{
+        socket.send("GSK"+gauss_mask_k_range.value)
+        document.querySelector("#gauss_k_v").innerHTML = gauss_mask_k_range.value
+    })
+
+
+
+    socket.addEventListener('message', ev => {
+        // console.log(ev.data)
+        let prefix = ev.data.slice(0,ws_prefix)
+        if(prefix == "THR1") {
+            img_global_thr_1.src = "data:;base64," + ev.data.slice(ws_prefix)
+        } else if(prefix == "THR2") {
+            img_global_thr_2.src = "data:;base64," + ev.data.slice(ws_prefix)
+        } else if(prefix == "CANN") {
+            document.querySelector("#img_edge").src = "data:;base64," + ev.data.slice(ws_prefix)
+        } else if(prefix == "GUS1") {
+            img_gaussblur.src = "data:;base64," + ev.data.slice(ws_prefix);
+        } else if(prefix == "GUS2") {
+            // console.log(ev.data)
+            img_gaussblur_mask.src = "data:;base64," + ev.data.slice(ws_prefix);
+        } else if(prefix == "GUS3") {
+            img_gaussblur_merge.src = "data:;base64," + ev.data.slice(ws_prefix);
+        } else if(prefix == "TPLT") {
+            img_template_conv_result.src = "data:;base64," + ev.data.slice(ws_prefix);
+        } else if(prefix == "TPLN") {
+            img_template_conv_result_norm.src = "data:;base64," + ev.data.slice(ws_prefix);
+        }
+    })
+    img_upload.addEventListener("change", ev => {
+        // console.log(img_upload.files)
+        if (img_upload.files.length > 1 || img_upload.files.length == 0) {
+            alert("能且只能选择一个图片!")
+            return;
+        }
+        
+        var fr = new FileReader()
+        fr.readAsDataURL(img_upload.files[0])
+        fr.onload = function () {
+            document.querySelector("#img_raw").src = fr.result
+        }
+
+        let form_data = new FormData();
+        form_data.append("file", img_upload.files[0])
+        // console.log(form_data.getAll("file"))
+        fetch("/img_upload", {
+            method: "POST",
+            body: form_data
+        }).then((resp) => (resp.json().then((res) => {
+            document.querySelector("#img_heq").src = "data:;base64," + res.heq_b64;
+            document.querySelector("#img_edge").src = "data:;base64," + res.edges_b64;
+            document.querySelector("#img_hist").src = "data:;base64," + res.hist_b64;
+            document.querySelector("#img_dft").src = "data:;base64," + res.dft_b64;
+            document.querySelector("#global_thr_otsu").innerHTML = "Otsu推荐阈值: "+res.otsu;
+
+            socket.send("THR" + global_thr_range.value)
+            socket.send("CN1" + canny_thr_range_1.value)
+            socket.send("CN2" + canny_thr_range_2.value)
+            socket.send("GS1"+gauss_ks_range.value)
+            socket.send("GS2"+gauss_sigma_range.value)
+            socket.send("GSK"+gauss_mask_k_range.value)
+            // socket.send("TPL"+"0,0,0,0,1,0,0,0,0")
+        })))
+    })
+</script>
+
+</html>

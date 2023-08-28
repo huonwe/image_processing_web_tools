@@ -1,0 +1,27 @@
+<div class="img_show_main">
+    <img id="img_raw" src="" alt="原图像展示">
+    <img id="img_heq" src="" alt="直方图均衡化">
+    
+    <img id="img_edge" src="" alt="边缘检测">
+    <img id="img_global_thr_1" src="" alt="全局阈值1">
+    <img id="img_global_thr_2" src="" alt="全局阈值2">
+</div>
+
+<div class="hist">
+    <img id="img_hist" src="" alt="直方图">
+</div>
+
+<div>
+    <div>
+        <button onclick="document.querySelector('#img_upload').click()">选择图像</button>
+        <input id="img_upload" type="file" style="display: none;">
+    </div>
+    <div class="range_bar">
+        <input id="global_thr" type="range" name="global_thr" min="0" max="255" value="0">
+        <label for="global_thr">全局阈值</label>
+        <input id="canny_thr_1" type="range" name="canny_thr_1" min="0" max="255" value="100">
+        <label for="canny_thr_1">Canny THR MINVAL</label>
+        <input id="canny_thr_2" type="range" name="canny_thr_2" min="0" max="255" value="200">
+        <label for="canny_thr_2">Canny THR MAXVAL</label>
+    </div>
+</div>
